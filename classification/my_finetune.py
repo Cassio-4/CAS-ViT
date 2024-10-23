@@ -10,7 +10,7 @@ from model import *
 
 def get_args_parser():
     parser = argparse.ArgumentParser('CAS-ViT training and evaluation script for image classification', add_help=False)
-    parser.add_argument('--batch_size', default=256, type=int,
+    parser.add_argument('--batch_size', default=64, type=int,
                         help='Per GPU batch size')
     parser.add_argument('--epochs', default=100, type=int)
     parser.add_argument('--patience_time', default=15, type=int)
@@ -69,7 +69,7 @@ model.to(device)
 criterion = torch.nn.CrossEntropyLoss()
 opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
-dl_train, dl_valid, dl_test = build_dataset(args.data_path)
+dl_train, dl_valid, dl_test = build_dataset(args)
 epochs = args.epochs
 loss_train = []
 loss_eval  = []

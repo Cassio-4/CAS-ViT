@@ -50,16 +50,15 @@ class MyDataset(Dataset):
     def __len__(self) -> int:
         return len(self.instances)
 
-def build_dataset(dir):
+def build_dataset(args):
     transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(), # Convert images to tensors
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize the images
     ])
-    return get_test_val_train_splits(MyDataset(dir, transform))
+    return get_test_val_train_splits(MyDataset(args.data_path, transform), args.batch_size)
 
-def get_test_val_train_splits(ds):
-    bs = 64
+def get_test_val_train_splits(ds, bs):
     train_idx, temp_idx = train_test_split(np.arange(len(ds)),test_size=0.3,shuffle=True,stratify=ds.targets)
     valid_idx, test_idx = train_test_split(temp_idx,test_size=0.5,shuffle=True,stratify=ds.targets[temp_idx])
 
