@@ -13,7 +13,7 @@ import os
 import copy
 
 from timm.models.layers import DropPath, trunc_normal_, to_2tuple
-from timm.models.registry import register_model
+from timm.models import register_model
 
 # ======================================================================================================================
 def stem(in_chs, out_chs):
