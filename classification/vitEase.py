@@ -19,7 +19,7 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 from timm.models.vision_transformer import PatchEmbed
-from timm.models.registry import register_model
+from timm.models import register_model
 
 import logging
 import os
@@ -30,16 +30,17 @@ import copy
 
 class Adapter(nn.Module):
     def __init__(self,
-                 config=None,
-                 d_model=None,
-                 bottleneck=None,
+                 n_embd = None,
+                 down_size = None,
                  dropout=0.0,
                  init_option="bert",
                  adapter_scalar="1.0",
                  adapter_layernorm_option="in"):
         super().__init__()
-        self.n_embd = config.d_model if d_model is None else d_model
-        self.down_size = config.attn_bn if bottleneck is None else bottleneck
+        if (n_embd is None) or (down_size is None):
+            print("WARNING: Invalid adapter sizes") 
+        self.n_embd = n_embd
+        self.down_size = down_size
 
         #_before
         self.adapter_layernorm_option = adapter_layernorm_option

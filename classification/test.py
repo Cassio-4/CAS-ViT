@@ -7,7 +7,7 @@ from PIL import Image
 from model import *
 
 
-def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpg"):
+def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpeg"):
     image = Image.open(path)
     data_transforms = transforms.Compose([
     transforms.Resize(256),
@@ -41,7 +41,7 @@ state_dict = checkpoint["model"]
 utils.load_state_dict(model, state_dict)
 model.to(device)
 
-#print(model.parameters)
+print(model.parameters)
 model.eval()
 
 with torch.inference_mode():

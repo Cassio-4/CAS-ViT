@@ -13,12 +13,21 @@ class RCViTAdapter(rcvit.RCViT):
         self.cur_adapter = nn.ModuleList()
         self.get_new_adapter()
     
+    def get_embedding_dimensions(self):
+        lst_dims = []
+        x = torch.rand((1, 3, 224, 224))
+        x = self.patch_embed(x)
+        for idx, block in enumerate(self.network):
+            x = block(x)
+            lst_dims.append(x.shape)
+            print(x.shape[2])
+        return lst_dims
+
     def get_new_adapter(self):
-        config = self.config
-        self.cur_adapter = nn.ModuleList()
-        if config.ffn_adapt:
+        lst_dims = self.get_embedding_dimensions()
+        if True: #TODO: flag if adapter or not
             for i in range(len(self.blocks)):
-                adapter = Adapter(self.config, dropout=0.1, bottleneck=config.ffn_num,
+                adapter = Adapter(n_embd=1, down_size=1, dropout=0.1, bottleneck=config.ffn_num,
                                         init_option=config.ffn_adapter_init_option,
                                         adapter_scalar=config.ffn_adapter_scalar,
                                         adapter_layernorm_option=config.ffn_adapter_layernorm_option,
@@ -87,18 +96,3 @@ class RCViTAdapter(rcvit.RCViT):
         features.append(x)
         
         return features
-
-    def forward(self, x, test=False, use_init_ptm=False):
-        if not test:
-            output = self.forward_train(x)
-        else:
-            features = self.forward_test(x, use_init_ptm)
-            output = torch.Tensor().to(features[0].device)
-            for x in features:
-                cls = x[:, 0, :]
-                output = torch.cat((
-                    output,
-                    cls
-                ), dim=1)
-
-        return output

@@ -30,7 +30,7 @@ def get_args_parser():
     parser.add_argument('--opt', default='adamw', type=str, metavar='OPTIMIZER', help='Optimizer (default: "adamw"')
     parser.add_argument('--lr', type=float, default=6e-3, metavar='LR',
                         help='learning rate (default: 6e-3), with total batch size 4096')
-    parser.add_argument('--min_lr', type=float, default=1e-6, metavar='LR',
+    parser.add_argument('--min_lr', type=float, defaul   metavar='LR',
                         help='lower lr bound for cyclic schedulers that hit 0 (1e-6)')
     parser.add_argument('--weight_decay', type=float, default=0.05,
                         help='weight decay (default: 0.05)')
@@ -63,7 +63,7 @@ model: rcvit = create_model(
 checkpoint = torch.load(args.weights_path, map_location="cpu", weights_only=False)
 state_dict = checkpoint["model"]
 utils.load_state_dict(model, state_dict)
-#model.head = torch.nn.Linear(220, 2)
+model.head = torch.nn.Linear(220, 2)
 model.to(device)
 
 criterion = torch.nn.CrossEntropyLoss()

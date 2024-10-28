@@ -50,7 +50,7 @@ def get_args_parser():
     
     return parser.parse_args()
 
-def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpg"):
+def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpeg"):
     image = Image.open(path)
     data_transforms = transforms.Compose([
     transforms.Resize(256),
@@ -107,10 +107,8 @@ checkpoint = torch.load(model_weights, map_location="cpu", weights_only=False)
 state_dict = checkpoint["model"]
 utils.load_state_dict(model, state_dict)
 model.to(device) 
-
-print(model.parameters)
 model.eval()
-
+model.get_embedding_dimensions()
 
 
 with torch.inference_mode():
