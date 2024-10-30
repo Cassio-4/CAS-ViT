@@ -6,7 +6,7 @@ import utils as utils
 import numpy as np
 from PIL import Image
 from model import *
-from rcvitAdapter import RCViTAdapter
+from classification.model.rcvitAdapter import RCViTAdapter
 from vitEase import VisionTransformer 
 import argparse, json
 from easydict import EasyDict
@@ -50,7 +50,7 @@ def get_args_parser():
     
     return parser.parse_args()
 
-def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpg"):
+def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpeg"):
     image = Image.open(path)
     data_transforms = transforms.Compose([
     transforms.Resize(256),

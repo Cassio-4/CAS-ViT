@@ -1,21 +1,21 @@
 from timm.models import create_model
 import argparse
 import torch
-from torchvision import transforms
 import utils as utils
 import numpy as np
 import torch.nn as nn
 from my_dataset import build_dataset
 from model import *
 from easydict import EasyDict
-from rcvitAdapter import RCViTAdapter
+from model.rcvitAdapter import RCViTAdapter
+from sklearn.metrics import classification_report
 
 def get_args_parser():
     parser = argparse.ArgumentParser('CAS-ViT training and evaluation script for image classification', add_help=False)
-    parser.add_argument('--batch_size', default=8, type=int,
+    parser.add_argument('--batch_size', default=16, type=int,
                         help='Per GPU batch size')
-    parser.add_argument('--epochs', default=100, type=int)
-    parser.add_argument('--patience_time', default=15, type=int)
+    parser.add_argument('--epochs', default=200, type=int)
+    parser.add_argument('--patience_time', default=20, type=int)
 
     # Model parameters
     parser.add_argument('--model_name', default='rcvit_xs', type=str, metavar='MODEL',
@@ -28,7 +28,7 @@ def get_args_parser():
     parser.add_argument('--input_size', default=224, type=int,
                         help='image input size')
     # Data
-    parser.add_argument('--data_path', default='/home/cassio/Documents/Doutorado/Disciplinas/RNA/cats', type=str,
+    parser.add_argument('--data_path', default='/home/cassio/git/CAS-ViT/carros', type=str,
                         help='dataset path')
     # Optimization parameters
     parser.add_argument('--opt', default='adamw', type=str, metavar='OPTIMIZER', help='Optimizer (default: "adamw"')
@@ -69,7 +69,6 @@ def get_adapter_config():
 args = get_args_parser()
 device = "cuda" if torch.cuda.is_available() else "cpu"
 if args.adapter:
-
     model = RCViTAdapter(layers=[2, 2, 4, 2], embed_dims=[48, 56, 112, 220], mlp_ratios=4, downsamples=[True, True, True, True],
         norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=1000, drop_rate=0., drop_path_rate=0.1,
         fork_feat=False, init_cfg=None,  pretrained=False, distillation=False, adapter_config=get_adapter_config())
@@ -110,6 +109,7 @@ while (not stop):
         x = x.to(device)
         y = y.to(device)
         pred = model(x)
+        print(f"pred {pred} ::: y{y}")
         closs = criterion(pred,y)
         closs.backward()
         opt.step()
@@ -143,5 +143,21 @@ while (not stop):
     if last_best_result > args.patience_time:
         stop = True
     print("epoch %d loss_train %4.3f loss_eval %4.3f last_best %d"%(epoch,loss_train[-1],loss_eval[-1],last_best_result))
+    with open(args.name_to_save.split(".")[0]+".csv", "a") as f:
+        f.write("%d,%4.3f,%4.3f\n"%(epoch,loss_train[-1],loss_eval[-1]))
     epoch += 1
+## Generate classification report
+model.eval()
+lres = []
+ytrue = []
+with torch.no_grad():
+    for data,target in dl_test:
+        data = data.to(device)
+        pred = model(data)
+        res  = pred.argmax(dim=1).cpu().tolist()
+        lres += res
+        ytrue += target
+target_names = ['Mollymauk', 'Yuru']
+print(classification_report(ytrue, lres, target_names=target_names))
+
 
