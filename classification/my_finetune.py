@@ -20,7 +20,7 @@ def get_args_parser():
     # Model parameters
     parser.add_argument('--model_name', default='rcvit_xs', type=str, metavar='MODEL',
                         help='Name of model to train')
-    parser.add_argument('--adapter', default=True)
+    parser.add_argument('--adapter',  action="store_true")
     parser.add_argument('--name_to_save', type=str, default='best_mode.pth')
     parser.add_argument('--nb_classes', default=2, type=int)
     parser.add_argument('--weights_path', type=str, default="/home/cassio/git/CAS-ViT/cas-vit-xs.pth",
@@ -68,7 +68,7 @@ def get_adapter_config():
 
 args = get_args_parser()
 device = "cuda" if torch.cuda.is_available() else "cpu"
-if args.adapter:
+if args.adapter is True:
     model = RCViTAdapter(layers=[2, 2, 4, 2], embed_dims=[48, 56, 112, 220], mlp_ratios=4, downsamples=[True, True, True, True],
         norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=1000, drop_rate=0., drop_path_rate=0.1,
         fork_feat=False, init_cfg=None,  pretrained=False, distillation=False, adapter_config=get_adapter_config())
@@ -102,6 +102,7 @@ stop = False
 epoch = 0
 lowest_loss_eval = 10000
 last_best_result = 0
+print("Start Training")
 while (not stop):
     model.train()
     lloss = []
@@ -109,7 +110,6 @@ while (not stop):
         x = x.to(device)
         y = y.to(device)
         pred = model(x)
-        print(f"pred {pred} ::: y{y}")
         closs = criterion(pred,y)
         closs.backward()
         opt.step()
