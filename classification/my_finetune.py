@@ -68,6 +68,7 @@ def get_adapter_config():
 
 args = get_args_parser()
 device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"DEVICE:  {device}")
 if args.adapter is True:
     model = RCViTAdapter(layers=[2, 2, 4, 2], embed_dims=[48, 56, 112, 220], mlp_ratios=4, downsamples=[True, True, True, True],
         norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=1000, drop_rate=0., drop_path_rate=0.1,
@@ -88,6 +89,8 @@ checkpoint = torch.load(args.weights_path, map_location="cpu", weights_only=Fals
 state_dict = checkpoint["model"]
 utils.load_state_dict(model, state_dict)
 model.head = torch.nn.Linear(220, 2)
+n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(f"PARAMETERS:  {n_parameters}")
 model.to(device)
 
 criterion = torch.nn.CrossEntropyLoss()
