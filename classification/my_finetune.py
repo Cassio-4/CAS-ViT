@@ -92,6 +92,7 @@ model.head = torch.nn.Linear(220, 2)
 n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"PARAMETERS:  {n_parameters}")
 model.to(device)
+print(f"MODEL LOCATION: {model.device}")
 
 criterion = torch.nn.CrossEntropyLoss()
 opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
