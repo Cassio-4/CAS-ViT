@@ -50,7 +50,7 @@ def get_args_parser():
     
     return parser.parse_args()
 
-def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpeg"):
+def load_image(path="/home/cassio/git/CAS-ViT/WoodenSpoon.jpg"):
     image = Image.open(path)
     data_transforms = transforms.Compose([
     transforms.Resize(256),
@@ -95,9 +95,11 @@ model_name = "rcvit_xs"
 model_weights = "/home/cassio/git/CAS-ViT/cas-vit-xs.pth"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+tuning_config=get_vision_config()
+
 model = RCViTAdapter(layers=[2, 2, 4, 2], embed_dims=[48, 56, 112, 220], mlp_ratios=4, downsamples=[True, True, True, True],
         norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=1000, drop_rate=0., drop_path_rate=0.1,
-        fork_feat=False, init_cfg=None,  pretrained=False, distillation=False)
+        fork_feat=False, init_cfg=None,  pretrained=False, distillation=False, adapter_config=tuning_config)
 
 
 #model1 = VisionTransformer(tuning_config=get_vision_config())

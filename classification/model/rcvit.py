@@ -280,7 +280,6 @@ class RCViT(nn.Module):
         outs = []
         for idx, block in enumerate(self.network):
             x = block(x)
-            print(x.shape)
             if self.fork_feat and idx in self.out_indices:
                 norm_layer = getattr(self, f'norm{idx}')
                 x_out = norm_layer(x)
@@ -289,7 +288,7 @@ class RCViT(nn.Module):
             return outs
         return x
 
-    def forward(self, x):
+    def forward(self, x):   
         x = self.patch_embed(x)
         x = self.forward_tokens(x)
         if self.fork_feat:

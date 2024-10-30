@@ -38,7 +38,8 @@ class Adapter(nn.Module):
                  adapter_layernorm_option="in"):
         super().__init__()
         if (n_embd is None) or (down_size is None):
-            print("WARNING: Invalid adapter sizes") 
+            print("WARNING: Invalid adapter sizes")
+            raise NotImplementedError
         self.n_embd = n_embd
         self.down_size = down_size
 
