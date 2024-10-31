@@ -140,7 +140,7 @@ while (not stop):
     if avg_loss_eval < lowest_loss_eval:
         lowest_loss_eval = avg_loss_eval
         last_best_result = 0
-        print("Best model found! saving...")
+        print(f"Best model found!(Epoch: {epoch}), saving...")
         actual_state = {'optim':opt.state_dict(),'model':model.state_dict(),'epoch':epoch,'loss_train':loss_train,'loss_eval':loss_eval}
         torch.save(actual_state, args.name_to_save)
     last_best_result += 1

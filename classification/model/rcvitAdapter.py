@@ -80,10 +80,11 @@ class RCViTAdapter(rcvit.RCViT):
     def get_embedding_dimensions(self):
         lst_dims = []
         x = torch.rand((1, 3, 224, 224))
-        x = self.patch_embed(x)
-        for idx, block in enumerate(self.network):
-            x = block(x)
-            lst_dims.append(x.shape)
+        with torch.no_grad():
+            x = self.patch_embed(x)
+            for idx, block in enumerate(self.network):
+                x = block(x)
+                lst_dims.append(x.shape)
         return lst_dims
 
     def get_new_adapter(self):
