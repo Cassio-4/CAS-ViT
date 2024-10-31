@@ -12,10 +12,10 @@ from sklearn.metrics import classification_report
 
 def get_args_parser():
     parser = argparse.ArgumentParser('CAS-ViT training and evaluation script for image classification', add_help=False)
-    parser.add_argument('--batch_size', default=16, type=int,
+    parser.add_argument('--batch_size', default=32, type=int,
                         help='Per GPU batch size')
-    parser.add_argument('--epochs', default=200, type=int)
-    parser.add_argument('--patience_time', default=20, type=int)
+    parser.add_argument('--epochs', default=120, type=int)
+    parser.add_argument('--patience_time', default=15, type=int)
 
     # Model parameters
     parser.add_argument('--model_name', default='rcvit_xs', type=str, metavar='MODEL',
