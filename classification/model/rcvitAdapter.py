@@ -2,6 +2,7 @@ from model import rcvit
 import torch
 import torch.nn as nn
 import math
+from utils import load_state_dict
 
 class Adapter(nn.Module):
     def __init__(self,
@@ -68,7 +69,7 @@ class Adapter(nn.Module):
 
 class RCViTAdapter(rcvit.RCViT):
     def __init__(self, layers, embed_dims, mlp_ratios=4, downsamples=..., norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=1000, 
-                 drop_rate=0, drop_path_rate=0, fork_feat=False, init_cfg=None, pretrained=None, distillation=True, adapter_config=None, **kwargs):
+                 drop_rate=0, drop_path_rate=0, fork_feat=False, init_cfg=None, pretrained=None, distillation=True, adapter_config=None, checkpoint_path=None, **kwargs):
         super().__init__(layers, embed_dims, mlp_ratios, downsamples, norm_layer, attn_bias, act_layer, num_classes, drop_rate, 
                          drop_path_rate, fork_feat, init_cfg, pretrained, distillation, **kwargs)
         
@@ -76,7 +77,18 @@ class RCViTAdapter(rcvit.RCViT):
         self.adapter_list = []
         self.cur_adapter = nn.ModuleList()
         self.get_new_adapter()
-    
+        self.head = torch.nn.Linear(220, 2)
+        ## Load pretrained weights
+        if pretrained and checkpoint_path is not None:
+            print("loading weights")
+            checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+            state_dict = checkpoint["model"]
+            load_state_dict(self, state_dict)
+        ## Freeze all but adapter layers     
+        n_parameters = sum(p.numel() for p in self.parameters() if p.requires_grad)   
+        print(f"before freeze params: {n_parameters}")
+        self.freeze()
+
     def get_embedding_dimensions(self):
         lst_dims = []
         x = torch.rand((1, 3, 224, 224))
@@ -103,11 +115,15 @@ class RCViTAdapter(rcvit.RCViT):
             print("====Not use adapter===")
     
     def freeze(self):
-        for param in self.parameters():
-            param.requires_grad = False
-        
-        for i in range(len(self.cur_adapter)):
-            self.cur_adapter[i].requires_grad = True
+        for name, param in self.named_parameters():
+            if ("cur_adapter" not in name):
+                param.requires_grad = False
+            if "head" in name:
+                param.requires_grad = True
+
+        for adapter in self.cur_adapter:
+            for param in adapter.parameters():
+                param.requires_grad = True
     
     def forward_tokens(self, x):
         outs = []
