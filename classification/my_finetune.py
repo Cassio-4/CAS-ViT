@@ -22,6 +22,7 @@ def get_args_parser():
     parser.add_argument('--model_name', default='rcvit_xs', type=str, metavar='MODEL',
                         help='Name of model to train')
     parser.add_argument('--adapter',  action="store_true")
+    parser.add_argument('--adapter_type', type=str, default="linear")
     parser.add_argument('--name_to_save', type=str, default='best_mode.pth')
     #parser.add_argument('--nb_classes', default=2, type=int)
     parser.add_argument('--weights_path', type=str, default="/home/cassio/git/CAS-ViT/cas-vit-xs.pth",
@@ -80,7 +81,8 @@ def get_model(args):
     if args.adapter is True:
         model = RCViTAdapter(layers=[2, 2, 4, 2], embed_dims=[48, 56, 112, 220], mlp_ratios=4, downsamples=[True, True, True, True],
             norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=NB_CLASSES, drop_rate=0., drop_path_rate=0.1,
-            fork_feat=False, init_cfg=None, pretrained=args.pretrained, distillation=False, adapter_config=get_adapter_config(), checkpoint_path=args.weights_path)
+            fork_feat=False, init_cfg=None, pretrained=args.pretrained, distillation=False, adapter_config=get_adapter_config(), checkpoint_path=args.weights_path,
+            adapter_type=args.adapter_type)
         
     else:
         model: rcvit = create_model(

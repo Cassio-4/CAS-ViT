@@ -11,7 +11,8 @@ class Adapter(nn.Module):
                  dropout=0.0,
                  init_option="bert",
                  adapter_scalar="1.0",
-                 adapter_layernorm_option="in"):
+                 adapter_layernorm_option="in",
+                 layer_type="linear"):
         super().__init__()
         if (n_embd is None) or (down_size is None):
             print("WARNING: Invalid adapter sizes")
@@ -30,10 +31,14 @@ class Adapter(nn.Module):
             self.scale = nn.Parameter(torch.ones(1))
         else:
             self.scale = float(adapter_scalar)
-
-        self.down_proj = nn.Linear(self.n_embd, self.down_size)
-        self.non_linear_func = nn.ReLU()
-        self.up_proj = nn.Linear(self.down_size, self.n_embd)
+        if ("linear" in layer_type):
+            self.down_proj = nn.Linear(self.n_embd, self.down_size)
+            self.non_linear_func = nn.ReLU()
+            self.up_proj = nn.Linear(self.down_size, self.n_embd)
+        elif("conv" in layer_type):
+            self.down_proj = nn.Conv2d(self.down_size[1], self.down_size[1]+10,kernel_size=n_embd["conv_k"],stride=n_embd["conv_s"])
+            self.non_linear_func = nn.MaxPool2d(n_embd["pool_k"], n_embd["pool_s"])
+            self.up_proj = nn.ConvTranspose2d(self.down_size[1]+10, out_channels=self.down_size[1],kernel_size=n_embd["convT_k"],stride=n_embd["convT_s"] )
 
         self.dropout = dropout
         if init_option == "bert":
@@ -69,13 +74,15 @@ class Adapter(nn.Module):
 
 class RCViTAdapter(rcvit.RCViT):
     def __init__(self, layers, embed_dims, mlp_ratios=4, downsamples=..., norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=1000, 
-                 drop_rate=0, drop_path_rate=0, fork_feat=False, init_cfg=None, pretrained=None, distillation=True, adapter_config=None, checkpoint_path=None, **kwargs):
+                 drop_rate=0, drop_path_rate=0, fork_feat=False, init_cfg=None, pretrained=None, distillation=True, adapter_config=None, checkpoint_path=None,
+                 adapter_type="linear", **kwargs):
         super().__init__(layers, embed_dims, mlp_ratios, downsamples, norm_layer, attn_bias, act_layer, num_classes, drop_rate, 
                          drop_path_rate, fork_feat, init_cfg, pretrained, distillation, **kwargs)
         
         self.adapter_config = adapter_config
         self.adapter_list = []
         self.cur_adapter = nn.ModuleList()
+        self.adapter_type = adapter_type
         self.get_new_adapter()
         self.head = torch.nn.Linear(220, num_classes)
         ## Load pretrained weights
@@ -97,19 +104,47 @@ class RCViTAdapter(rcvit.RCViT):
             for idx, block in enumerate(self.network):
                 x = block(x)
                 lst_dims.append(x.shape)
+                print(x.shape)
         return lst_dims
+    
+    def get_conv_adapter_config(self, dims):
+        channel_height = dims[2]
+        if channel_height == 56:
+            conv_config = {"conv_k":(3,3), "conv_s":1, "pool_k":(3,3), "pool_s":2, "convT_k":(6,6), "convT_s":2}
+        elif channel_height == 28:
+            conv_config = {"conv_k":(3,3), "conv_s":1, "pool_k":(3,3), "pool_s":2, "convT_k":(6,6), "convT_s":2}
+        elif channel_height == 14:
+            conv_config = {"conv_k":(2,2), "conv_s":2, "pool_k":(3,3), "pool_s":1, "convT_k":(6,6), "convT_s":2}
+        elif channel_height == 7:
+            conv_config = {"conv_k":(1,1), "conv_s":1, "pool_k":(2,2), "pool_s":1, "convT_k":(2,2), "convT_s":1}
+        else:
+            raise(ValueError("Invalid dims for adapter"))
+        return conv_config
 
     def get_new_adapter(self):
         lst_dims = self.get_embedding_dimensions()
         if True: #TODO: flag if adapter or not
             for i in range(len(self.network)):
-                embd_in = lst_dims[i][2]
-                adapter = Adapter(n_embd=embd_in, down_size=embd_in//2, dropout=0.1,
-                                        init_option=self.adapter_config.ffn_adapter_init_option,
-                                        adapter_scalar=self.adapter_config.ffn_adapter_scalar,
-                                        adapter_layernorm_option=self.adapter_config.ffn_adapter_layernorm_option,
-                                        )
+                if "linear" in self.adapter_type:
+                    embd_in = lst_dims[i][2]
+                    adapter = Adapter(n_embd=embd_in, down_size=embd_in//2, dropout=0.1,
+                                            init_option=self.adapter_config.ffn_adapter_init_option,
+                                            adapter_scalar=self.adapter_config.ffn_adapter_scalar,
+                                            adapter_layernorm_option=self.adapter_config.ffn_adapter_layernorm_option,
+                                            layer_type=self.adapter_type
+                                            )
+                elif "conv" in self.adapter_type:
+                    conv_config = self.get_conv_adapter_config(lst_dims[i])
+                    adapter = Adapter(n_embd=conv_config,down_size=lst_dims[i], dropout=0.1,
+                                            init_option=self.adapter_config.ffn_adapter_init_option,
+                                            adapter_scalar=self.adapter_config.ffn_adapter_scalar,
+                                            adapter_layernorm_option=self.adapter_config.ffn_adapter_layernorm_option,
+                                            layer_type=self.adapter_type
+                                            )
+                else:
+                    raise(ValueError("Invalid layer type for adapter"))
                 self.cur_adapter.append(adapter)
+
             self.cur_adapter.requires_grad_(True)
         else:
             print("====Not use adapter===")
