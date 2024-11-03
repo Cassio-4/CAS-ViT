@@ -186,5 +186,4 @@ if __name__ == '__main__':
             res  = pred.argmax(dim=1).cpu().tolist()
             lres += res
             ytrue += target
-    target_names = ['Mollymauk', 'Yuru']
-    print(classification_report(ytrue, lres, target_names=target_names))
+    print(classification_report(ytrue, lres))
