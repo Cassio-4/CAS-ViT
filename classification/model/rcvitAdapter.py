@@ -19,6 +19,7 @@ class Adapter(nn.Module):
             raise NotImplementedError
         self.n_embd = n_embd
         self.down_size = down_size
+        self.layer_type=layer_type
 
         #_before
         self.adapter_layernorm_option = adapter_layernorm_option
@@ -37,7 +38,8 @@ class Adapter(nn.Module):
             self.up_proj = nn.Linear(self.down_size, self.n_embd)
         elif("conv" in layer_type):
             self.down_proj = nn.Conv2d(in_channels=self.down_size[1],out_channels=self.down_size[1]//2,kernel_size=n_embd["conv_k"],stride=n_embd["conv_s"])
-            self.non_linear_func = nn.MaxPool2d(n_embd["pool_k"], n_embd["pool_s"])
+            self.non_linear_func = nn.ReLU()
+            self.pool = nn.MaxPool2d(n_embd["pool_k"], n_embd["pool_s"])
             self.up_proj = nn.ConvTranspose2d(in_channels=self.down_size[1]//2,out_channels=self.down_size[1],kernel_size=n_embd["convT_k"],stride=n_embd["convT_s"] )
 
         self.dropout = dropout
@@ -57,6 +59,8 @@ class Adapter(nn.Module):
 
         down = self.down_proj(x)
         down = self.non_linear_func(down)
+        if("conv" in self.layer_type):
+            down = self.pool(down)
         down = nn.functional.dropout(down, p=self.dropout, training=self.training)
         up = self.up_proj(down)
 
