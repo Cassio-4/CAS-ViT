@@ -36,9 +36,9 @@ class Adapter(nn.Module):
             self.non_linear_func = nn.ReLU()
             self.up_proj = nn.Linear(self.down_size, self.n_embd)
         elif("conv" in layer_type):
-            self.down_proj = nn.Conv2d(self.down_size[1], self.down_size[1]+10,kernel_size=n_embd["conv_k"],stride=n_embd["conv_s"])
+            self.down_proj = nn.Conv2d(in_channels=self.down_size[1],out_channels=self.down_size[1]//2,kernel_size=n_embd["conv_k"],stride=n_embd["conv_s"])
             self.non_linear_func = nn.MaxPool2d(n_embd["pool_k"], n_embd["pool_s"])
-            self.up_proj = nn.ConvTranspose2d(self.down_size[1]+10, out_channels=self.down_size[1],kernel_size=n_embd["convT_k"],stride=n_embd["convT_s"] )
+            self.up_proj = nn.ConvTranspose2d(in_channels=self.down_size[1]//2,out_channels=self.down_size[1],kernel_size=n_embd["convT_k"],stride=n_embd["convT_s"] )
 
         self.dropout = dropout
         if init_option == "bert":
@@ -104,7 +104,6 @@ class RCViTAdapter(rcvit.RCViT):
             for idx, block in enumerate(self.network):
                 x = block(x)
                 lst_dims.append(x.shape)
-                print(x.shape)
         return lst_dims
     
     def get_conv_adapter_config(self, dims):
@@ -114,9 +113,9 @@ class RCViTAdapter(rcvit.RCViT):
         elif channel_height == 28:
             conv_config = {"conv_k":(3,3), "conv_s":1, "pool_k":(3,3), "pool_s":2, "convT_k":(6,6), "convT_s":2}
         elif channel_height == 14:
-            conv_config = {"conv_k":(2,2), "conv_s":2, "pool_k":(3,3), "pool_s":1, "convT_k":(6,6), "convT_s":2}
+            conv_config = {"conv_k":(2,2), "conv_s":1, "pool_k":(3,3), "pool_s":2, "convT_k":(4,4), "convT_s":2}
         elif channel_height == 7:
-            conv_config = {"conv_k":(1,1), "conv_s":1, "pool_k":(2,2), "pool_s":1, "convT_k":(2,2), "convT_s":1}
+            conv_config = {"conv_k":(2,2), "conv_s":1, "pool_k":(2,2), "pool_s":2, "convT_k":(3,3), "convT_s":2}
         else:
             raise(ValueError("Invalid dims for adapter"))
         return conv_config
