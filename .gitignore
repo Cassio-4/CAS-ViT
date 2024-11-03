@@ -163,6 +163,7 @@ cython_debug/
 *.jpg
 *.csv
 *.jpeg
+*.json
 
 # Models
 *.pth

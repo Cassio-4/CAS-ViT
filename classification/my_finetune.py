@@ -23,7 +23,7 @@ def get_args_parser():
                         help='Name of model to train')
     parser.add_argument('--adapter',  action="store_true")
     parser.add_argument('--name_to_save', type=str, default='best_mode.pth')
-    parser.add_argument('--nb_classes', default=2, type=int)
+    #parser.add_argument('--nb_classes', default=2, type=int)
     parser.add_argument('--weights_path', type=str, default="/home/cassio/git/CAS-ViT/cas-vit-xs.pth",
                         help='Path to pretrained weights')
     parser.add_argument('--input_size', default=224, type=int,
@@ -68,16 +68,25 @@ def get_adapter_config():
     return tuning_config
 
 def get_model(args):
+    if "cats" in args.data_path:
+        NB_CLASSES = 2
+        print("Dataset: cats")
+    elif "imagenet-a" in args.data_path:
+        NB_CLASSES = 200
+        print("Dataset: imagenet-a")
+    else:
+        raise(ValueError("Datasets implemented: cats, imagenet-a"))
+        
     if args.adapter is True:
         model = RCViTAdapter(layers=[2, 2, 4, 2], embed_dims=[48, 56, 112, 220], mlp_ratios=4, downsamples=[True, True, True, True],
-            norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=args.nb_classes, drop_rate=0., drop_path_rate=0.1,
+            norm_layer=nn.BatchNorm2d, attn_bias=False, act_layer=nn.GELU, num_classes=NB_CLASSES, drop_rate=0., drop_path_rate=0.1,
             fork_feat=False, init_cfg=None, pretrained=args.pretrained, distillation=False, adapter_config=get_adapter_config(), checkpoint_path=args.weights_path)
         
     else:
         model: rcvit = create_model(
             args.model_name,
             pretrained=False,
-            num_classes=args.nb_classes,
+            num_classes=NB_CLASSES,
             drop_path_rate=args.drop_path,
             head_init_scale=1.0,
             input_res=args.input_size,

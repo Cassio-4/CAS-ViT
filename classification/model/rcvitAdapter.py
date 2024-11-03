@@ -77,7 +77,7 @@ class RCViTAdapter(rcvit.RCViT):
         self.adapter_list = []
         self.cur_adapter = nn.ModuleList()
         self.get_new_adapter()
-        self.head = torch.nn.Linear(220, 2)
+        self.head = torch.nn.Linear(220, num_classes)
         ## Load pretrained weights
         if pretrained and checkpoint_path is not None:
             print("loading weights")

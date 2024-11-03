@@ -56,7 +56,17 @@ def build_dataset(args):
     transforms.ToTensor(), # Convert images to tensors
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize the images
     ])
-    return get_test_val_train_splits(MyDataset(args.data_path, transform), args.batch_size )
+    # If cats dataset
+    if "cats" in args.data_path: 
+        return get_test_val_train_splits(MyDataset(args.data_path, transform), args.batch_size)
+    # If ImageNet A dataset
+    else:
+        test_imgs_path = args.data_path + "/test"
+        train_imgs_path = args.data_path + "/train" 
+        ds_train = MyDataset(train_imgs_path, transform)
+        ds_test = MyDataset(test_imgs_path, transform)
+        return get_test_val_train_splits_ima(ds_train, ds_test, args.batch_size)
+
 
 def get_test_val_train_splits(ds, bs):
     train_idx, temp_idx = train_test_split(np.arange(len(ds)),test_size=0.3,shuffle=True,stratify=ds.targets, random_state=42)
@@ -70,6 +80,24 @@ def get_test_val_train_splits(ds, bs):
     dl_valid = torch.utils.data.DataLoader(ds,batch_size=bs,sampler=valid_sampler)
     dl_test  = torch.utils.data.DataLoader(ds,batch_size=bs,sampler=test_sampler)
     return dl_train, dl_valid, dl_test
+
+def get_test_val_train_splits_ima(ds_train, ds_test, bs):
+    train_idx = np.arange(len(ds_train))
+    np.random.seed(42)
+    np.random.shuffle(train_idx)
+    test_idx = np.arange(len(ds_test))
+    np.random.seed(42)
+    np.random.shuffle(test_idx)
+    #valid_idx, test_idx = train_test_split(np.arange(len(ds_test)),test_size=0.5,shuffle=True,stratify=ds_test.targets, random_state=42)
+
+    train_sampler = torch.utils.data.SubsetRandomSampler(train_idx)
+    test_sampler = torch.utils.data.SubsetRandomSampler(test_idx)
+   
+
+    dl_train = torch.utils.data.DataLoader(ds_train,batch_size=bs,sampler=train_sampler)
+    dl_test = torch.utils.data.DataLoader(ds_test,batch_size=bs,sampler=test_sampler)
+
+    return dl_train, dl_test, dl_test
     
 #def main():
 #    print("Testing dataset")
