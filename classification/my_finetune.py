@@ -120,7 +120,7 @@ def train(args, model, device):
     lowest_loss_eval = 10000
     last_best_result = 0
     print("Start Training")
-    while (not stop):
+    while (not stop and epoch <= args.epochs):
         model.train()
         lloss = []
         for x,y in dl_train:
