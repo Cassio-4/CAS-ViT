@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 from torchvision import transforms
+import torchvision
 from sklearn.model_selection import train_test_split
 import numpy as np
 import torch
@@ -59,14 +60,14 @@ def build_dataset(args):
     # If cats dataset
     if "cats" in args.data_path: 
         return get_test_val_train_splits(MyDataset(args.data_path, transform), args.batch_size)
-    # If ImageNet A dataset
+    elif "cifar" in args.data_path:
+        return get_cifar100_dataloaders(args)
     else:
         test_imgs_path = args.data_path + "/test"
         train_imgs_path = args.data_path + "/train" 
         ds_train = MyDataset(train_imgs_path, transform)
         ds_test = MyDataset(test_imgs_path, transform)
         return get_test_val_train_splits_ima(ds_train, ds_test, args.batch_size)
-
 
 def get_test_val_train_splits(ds, bs):
     train_idx, temp_idx = train_test_split(np.arange(len(ds)),test_size=0.3,shuffle=True,stratify=ds.targets, random_state=42)
@@ -99,13 +100,13 @@ def get_test_val_train_splits_ima(ds_train, ds_test, bs):
 
     return dl_train, dl_test, dl_test
     
-#def main():
-#    print("Testing dataset")
-#    dir_path = "/home/cassio/git/CAS-ViT/carros"
-#    dataset = build_dataset(dir_path)
-#    print(dataset.instances)
+def get_cifar100_dataloaders():
+    transform_train = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(), # Convert images to tensors
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize the images
+    ])
 
-
-#if __name__ == "__main__":
-#    main()
-
+    cifar100_training = torchvision.datasets.CIFAR100(root='./data', train=True, download=True, transform=transform_train)
+    cifar100_test = torchvision.datasets.CIFAR100(root='./data', train=False, download=True, transform=transform_test)
+    cifar100_test_loader = torch.utils.data.DataLoader(cifar100_test, shuffle=True, num_workers=2, batch_size=args.batch_size)
