@@ -23,7 +23,7 @@ from utils import NativeScalerWithGradNormCount as NativeScaler
 import utils as utils
 
 from model import *
-from classification.data.samplers import MultiScaleSamplerDDP
+from data.samplers import MultiScaleSamplerDDP
 
 
 def str2bool(v):
