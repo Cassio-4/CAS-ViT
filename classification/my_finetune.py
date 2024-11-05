@@ -4,7 +4,7 @@ import torch
 import utils as utils
 import numpy as np
 import torch.nn as nn
-from my_dataset import build_dataset
+from data.my_dataset import build_dataset
 from model import *
 from easydict import EasyDict
 from model.rcvitAdapter import RCViTAdapter

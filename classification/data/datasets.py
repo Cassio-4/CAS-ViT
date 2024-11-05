@@ -27,6 +27,9 @@ def build_dataset(is_train, args):
     if args.data_set == 'CIFAR':
         dataset = datasets.CIFAR100(args.data_path, train=is_train, transform=transform, download=True)
         nb_classes = 100
+    elif args.data_set == "FGVC":
+        split ='train' if is_train else 'test'
+        dataset = datasets.FGVCAircraft(args.data_path, split=split, annotation_level='variant', transform=transform, download=True)
     elif args.data_set == 'IMNET':
         print("reading from datapath", args.data_path)
         # root = os.path.join(args.data_path, 'train' if is_train else 'val')
@@ -44,6 +47,12 @@ def build_dataset(is_train, args):
         assert not is_train, f'IMNET-A should only be used when Test'
         dataset = ImageNetADataset(args.data_path, is_train, transform=transform)
         nb_classes = 1000
+    elif args.data_set == 'StanfordCars':
+        split ='train' if is_train else 'test'
+        #https://github.com/pytorch/vision/issues/7545#issuecomment-1631441616
+        #https://github.com/pytorch/vision/issues/7545#issuecomment-2282674373
+        dataset = datasets.StanfordCars(args.data_path, split=split, transform=transform, download=False)
+        nb_classes = 196
     elif args.data_set == "image_folder":
         root = args.data_path if is_train else args.eval_data_path
         dataset = datasets.ImageFolder(root, transform=transform)
