@@ -28,7 +28,7 @@ def build_dataset(is_train, args):
         dataset = datasets.CIFAR100(args.data_path, train=is_train, transform=transform, download=True)
         nb_classes = 100
     elif args.data_set == "FGVC":
-        split ='train' if is_train else 'test'
+        split ='train' if is_train else 'val'
         dataset = datasets.FGVCAircraft(args.data_path, split=split, annotation_level='variant', transform=transform, download=True)
         nb_classes = 100
     elif args.data_set == 'IMNET':
@@ -49,7 +49,7 @@ def build_dataset(is_train, args):
         dataset = ImageNetADataset(args.data_path, is_train, transform=transform)
         nb_classes = 1000
     elif args.data_set == 'FLOWERS':
-        split ='train' if is_train else 'test'
+        split ='train' if is_train else 'val'
         dataset = datasets.Flowers102(args.data_path, split=split, transform=transform, download=True)
         nb_classes = 102
     elif args.data_set == "image_folder":
