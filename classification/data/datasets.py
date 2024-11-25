@@ -25,6 +25,7 @@ def build_dataset(is_train, args):
     print("---------------------------")
 
     if args.data_set == 'CIFAR':
+        split = 'train' if is_train else 'test'
         dataset = datasets.CIFAR100(args.data_path, train=is_train, transform=transform, download=True)
         nb_classes = 100
     elif args.data_set == "FGVC":

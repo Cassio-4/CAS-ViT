@@ -24,6 +24,7 @@ import utils as utils
 
 from model import *
 from data.samplers import MultiScaleSamplerDDP
+from quantization_scripts import post_training_static_quantization, post_training_static_quantization_per_channel
 
 
 def str2bool(v):
@@ -161,6 +162,8 @@ def get_args_parser():
                         help='start epoch')
     parser.add_argument('--eval', type=str2bool, default=False,
                         help='Perform evaluation only')
+    parser.add_argument('--quantize', default='', choices=['STATIC', 'STATIC_CHANNEL', ''],
+                        help='which quantization to apply, empty for none')
     parser.add_argument('--dist_eval', type=str2bool, default=True,
                         help='Enabling distributed evaluation')
     parser.add_argument('--disable_eval', type=str2bool, default=False,
@@ -396,6 +399,14 @@ def main(args):
     utils.auto_load_model(
         args=args, model=model, model_without_ddp=model_without_ddp,
         optimizer=optimizer, loss_scaler=loss_scaler, model_ema=model_ema, state_dict_name=model_state_dict_name)
+
+    if args.quantize:
+        print(f"Beggining Quantization, mode: {args.quantize}")
+        if args.quantize == "STATIC":
+            post_training_static_quantization(args, model, data_loader_train, data_loader_val)
+        elif args.quantize == "STATIC_CHANNEL":
+            post_training_static_quantization_per_channel(args, model, data_loader_train, data_loader_val)
+        return
 
     if args.eval:
         print(f"Eval only mode")
