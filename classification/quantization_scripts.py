@@ -46,7 +46,7 @@ def post_training_static_quantization(args, model, data_loader_train, data_loade
 def post_training_static_quantization_per_channel(args, model, data_loader_train, data_loader_test):
     per_channel_quantized_model = model
     per_channel_quantized_model.eval()
-    per_channel_quantized_model.fuse_model()
+    #per_channel_quantized_model.fuse_model()
     # The old 'fbgemm' is still available but 'x86' is the recommended default.
     per_channel_quantized_model.qconfig = torch.ao.quantization.get_default_qconfig('x86')
     print(per_channel_quantized_model.qconfig)
