@@ -24,7 +24,6 @@ def post_training_static_quantization(args, model, data_loader_train, data_loade
 
     # Calibrate first
     print('Post Training Quantization Prepare: Inserting Observers')
-    #print('\n Inverted Residual Block:After observer insertion \n\n', model.features[1].conv)
 
     # Calibrate with the training set
     evaluate(data_loader=data_loader_train, model=model, device='cpu', use_amp=False)
@@ -36,7 +35,7 @@ def post_training_static_quantization(args, model, data_loader_train, data_loade
     # This warning occurs because not all modules are run in each model runs, so some
     # modules may not be calibrated.
     print('Post Training Quantization: Convert done')
-    print('\n Inverted Residual Block: After fusion and quantization, note fused modules: \n\n',model.features[1].conv)
+   # print('\n Inverted Residual Block: After fusion and quantization, note fused modules: \n\n',model.features[1].conv)
 
     print("Size of model after quantization")
     print_size_of_model(model)
